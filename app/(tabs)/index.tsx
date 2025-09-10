@@ -1,141 +1,126 @@
-// index.tsx
-import React, { useState } from "react";
-import {
-  SafeAreaView,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  View,
-} from "react-native";
+import React, { useState } from 'react';
+import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-export default function App() {
-  const [valor, setValor] = useState("");
-  const [meses, setMeses] = useState("");
-  const [juros, setJuros] = useState("");
-  const [resultado, setResultado] = useState({ semJuros: 0, comJuros: 0 });
+const standard = [0.5, 0.75, 1, 1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70];
 
-  const formatCurrency = (v: number) =>
-    `R$ ${v.toFixed(2).replace(".", ",")}`;
+const App = () => {
+  const [corrente, setCorrente] = useState<string>('');
+  const [distancia, setDistancia] = useState<string>('');
+  const [res, setRes] = useState<{
+    b110: number;
+    b220: number;
+    recom110: number;
+    recom220: number;
+  } | null>(null);
+
+  const roundUpStandard = (value: number): number => {
+    const found = standard.find(s => s >= value);
+    return found || standard[standard.length - 1];
+  };
 
   const calcular = () => {
-    const P = parseFloat(valor.replace(",", ".")) || 0; // investimento mensal
-    const n = parseInt(meses) || 0; // número de meses
-    const i = (parseFloat(juros.replace(",", ".")) || 0) / 100; // taxa mensal
-
-    if (P <= 0 || n <= 0) {
-      setResultado({ semJuros: 0, comJuros: 0 });
+    const I = parseFloat(corrente.replace(',', '.')) || 0;
+    const d = parseFloat(distancia.replace(',', '.')) || 0;
+    
+    if (I <= 0 || d <= 0) {
+      Alert.alert('Erro', 'Informe corrente e distância válidas');
       return;
     }
 
-    // sem juros = valor investido * meses
-    const semJuros = P * n;
+    const b110 = (2 * I * d) / 294.64;
+    const b220 = (2 * I * d) / 510.4;
 
-    // com juros compostos (fórmula da soma de PA geométrica):
-    // FV = P * [ ( (1+i)^n - 1 ) / i ]
-    let comJuros = semJuros;
-    if (i > 0) {
-      comJuros = P * ((Math.pow(1 + i, n) - 1) / i);
-    }
-
-    setResultado({ semJuros, comJuros });
+    setRes({
+      b110: Math.round(b110 * 100) / 100,
+      b220: Math.round(b220 * 100) / 100,
+      recom110: roundUpStandard(b110),
+      recom220: roundUpStandard(b220)
+    });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>Simulador de Investimentos</Text>
-        </View>
+        <Text style={styles.title}>Calculadora de Bitola</Text>
 
-        <Text style={styles.label}>Investimento mensal:</Text>
+        {}
         <TextInput
           style={styles.input}
-          placeholder="Digite o valor"
+          placeholder="Corrente (A)"
+          value={corrente}
+          onChangeText={setCorrente}
           keyboardType="numeric"
-          value={valor}
-          onChangeText={setValor}
         />
-
-        <Text style={styles.label}>Número de meses:</Text>
         <TextInput
           style={styles.input}
-          placeholder="Quantos meses deseja investir"
+          placeholder="Distância (m)"
+          value={distancia}
+          onChangeText={setDistancia}
           keyboardType="numeric"
-          value={meses}
-          onChangeText={setMeses}
         />
 
-        <Text style={styles.label}>Taxa de juros ao mês:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Digite a taxa de juros"
-          keyboardType="numeric"
-          value={juros}
-          onChangeText={setJuros}
-        />
-
+        {}
         <TouchableOpacity style={styles.button} onPress={calcular}>
-          <Text style={styles.buttonText}>Simular</Text>
+          <Text style={styles.buttonText}>Calcular</Text>
         </TouchableOpacity>
 
-        <Text style={styles.result}>
-          Valor total sem juros: {formatCurrency(resultado.semJuros)}
-        </Text>
-        <Text style={styles.result}>
-          Valor total com juros compostos: {formatCurrency(resultado.comJuros)}
-        </Text>
+        {}
+        {res && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Resultado</Text>
+            <Text>Bitola (110V): {res.b110} mm² — recomenda: {res.recom110} mm²</Text>
+            <Text>Bitola (220V): {res.b220} mm² — recomenda: {res.recom220} mm²</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#e6f2e6" },
-  content: { padding: 16 },
-  header: {
-    backgroundColor: "#1c4b27",
-    padding: 12,
-    borderRadius: 4,
-    marginBottom: 20,
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF8F0',
   },
-  headerText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 18,
-    textAlign: "center",
+  content: {
+    padding: 18,
   },
-  label: {
-    color: "#2f5b9e",
-    fontWeight: "600",
-    marginBottom: 4,
-    marginTop: 10,
-    textAlign: "center",
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: '#4A148C',
   },
   input: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    padding: 10,
-    backgroundColor: "#fff",
+    borderColor: '#EFEFEF',
     marginBottom: 8,
   },
   button: {
-    backgroundColor: "#3d2b23",
-    padding: 12,
-    marginTop: 18,
-    borderRadius: 25,
-    alignItems: "center",
-    alignSelf: "center",
-    paddingHorizontal: 30,
+    backgroundColor: '#B45309',
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
   },
-  buttonText: { color: "#fff", fontWeight: "600" },
-  result: {
-    marginTop: 12,
-    fontWeight: "600",
-    fontSize: 16,
-    color: "#333",
-    textAlign: "center",
+  buttonText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  card: {
+    marginTop: 16,
+    backgroundColor: '#fff',
+    padding: 14,
+    borderRadius: 10,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontWeight: '700',
+    marginBottom: 8,
+    color: '#4A148C',
   },
 });
+
+export default App;
