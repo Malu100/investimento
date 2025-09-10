@@ -1,75 +1,141 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// index.tsx
+import React, { useState } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  View,
+} from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function App() {
+  const [valor, setValor] = useState("");
+  const [meses, setMeses] = useState("");
+  const [juros, setJuros] = useState("");
+  const [resultado, setResultado] = useState({ semJuros: 0, comJuros: 0 });
 
-export default function HomeScreen() {
+  const formatCurrency = (v: number) =>
+    `R$ ${v.toFixed(2).replace(".", ",")}`;
+
+  const calcular = () => {
+    const P = parseFloat(valor.replace(",", ".")) || 0; // investimento mensal
+    const n = parseInt(meses) || 0; // número de meses
+    const i = (parseFloat(juros.replace(",", ".")) || 0) / 100; // taxa mensal
+
+    if (P <= 0 || n <= 0) {
+      setResultado({ semJuros: 0, comJuros: 0 });
+      return;
+    }
+
+    // sem juros = valor investido * meses
+    const semJuros = P * n;
+
+    // com juros compostos (fórmula da soma de PA geométrica):
+    // FV = P * [ ( (1+i)^n - 1 ) / i ]
+    let comJuros = semJuros;
+    if (i > 0) {
+      comJuros = P * ((Math.pow(1 + i, n) - 1) / i);
+    }
+
+    setResultado({ semJuros, comJuros });
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Simulador de Investimentos</Text>
+        </View>
+
+        <Text style={styles.label}>Investimento mensal:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Digite o valor"
+          keyboardType="numeric"
+          value={valor}
+          onChangeText={setValor}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+
+        <Text style={styles.label}>Número de meses:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Quantos meses deseja investir"
+          keyboardType="numeric"
+          value={meses}
+          onChangeText={setMeses}
+        />
+
+        <Text style={styles.label}>Taxa de juros ao mês:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Digite a taxa de juros"
+          keyboardType="numeric"
+          value={juros}
+          onChangeText={setJuros}
+        />
+
+        <TouchableOpacity style={styles.button} onPress={calcular}>
+          <Text style={styles.buttonText}>Simular</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.result}>
+          Valor total sem juros: {formatCurrency(resultado.semJuros)}
+        </Text>
+        <Text style={styles.result}>
+          Valor total com juros compostos: {formatCurrency(resultado.comJuros)}
+        </Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: { flex: 1, backgroundColor: "#e6f2e6" },
+  content: { padding: 16 },
+  header: {
+    backgroundColor: "#1c4b27",
+    padding: 12,
+    borderRadius: 4,
+    marginBottom: 20,
   },
-  stepContainer: {
-    gap: 8,
+  headerText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 18,
+    textAlign: "center",
+  },
+  label: {
+    color: "#2f5b9e",
+    fontWeight: "600",
+    marginBottom: 4,
+    marginTop: 10,
+    textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    padding: 10,
+    backgroundColor: "#fff",
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  button: {
+    backgroundColor: "#3d2b23",
+    padding: 12,
+    marginTop: 18,
+    borderRadius: 25,
+    alignItems: "center",
+    alignSelf: "center",
+    paddingHorizontal: 30,
+  },
+  buttonText: { color: "#fff", fontWeight: "600" },
+  result: {
+    marginTop: 12,
+    fontWeight: "600",
+    fontSize: 16,
+    color: "#333",
+    textAlign: "center",
   },
 });
