@@ -8,4 +8,4 @@
 
 ## 🖼️ Print do App
 
-<img src="./assets/images/investimento.png/>
+<img src="./assets/images/investimento.png" width="300" />
